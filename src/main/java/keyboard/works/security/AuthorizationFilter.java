@@ -45,7 +45,7 @@ public class AuthorizationFilter extends OncePerRequestFilter {
 		String header = request.getHeader(SecurityConstants.HEADER_STRING);
 		
 		if(header != null && header.startsWith(SecurityConstants.TOKEN_PREFIX))
-			return header;
+			return header.replace(SecurityConstants.TOKEN_PREFIX, "");
 		
 		return "";
 	}

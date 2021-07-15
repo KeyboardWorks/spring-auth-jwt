@@ -7,6 +7,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import keyboard.works.entity.User;
@@ -21,6 +22,9 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	private UserRepository userRepository;
+	
+	@Autowired
+	private BCryptPasswordEncoder bCryptPasswordEncoder;
 	
 	@Override
 	public List<UserResponse> getUsers() {
@@ -40,6 +44,9 @@ public class UserServiceImpl implements UserService {
 		
 		User user = new User();
 		BeanUtils.copyProperties(userRequest, user);
+		
+		user.setPassword(bCryptPasswordEncoder.encode(userRequest.getPassword()));
+		
 		user = userRepository.save(user);
 		
 		return ResponseHelper.createResponse(UserResponse.class, user);

@@ -4,11 +4,14 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Set;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
 
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,9 +34,11 @@ import keyboard.works.utils.JwtHelper;
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 	
 	private final AuthenticationManager authenticationManager;
+	private final Validator validator;
 	
-	public AuthenticationFilter(AuthenticationManager authenticationManager) {
+	public AuthenticationFilter(AuthenticationManager authenticationManager, Validator validator) {
 		this.authenticationManager = authenticationManager;
+		this.validator = validator;
 	}
 	
 	@Override
@@ -49,11 +54,11 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 			ObjectMapper objectMapper = (ObjectMapper) SpringAppContext.getBean("objectMapper");
 			loginRequest = objectMapper.readValue(request.getInputStream(), LoginRequest.class);
 			
-			if(loginRequest.getUsername() == null || loginRequest.getUsername().trim().isEmpty())
-				throw new AuthenticationServiceException("Username is mandatory!");
+			Set<ConstraintViolation<LoginRequest>> constraintViolations = validator.validate(loginRequest);
 			
-			if(loginRequest.getPassword() == null || loginRequest.getPassword().trim().isEmpty())
-				throw new AuthenticationServiceException("Password is mandatory!");
+			for(ConstraintViolation<?> constraintViolation : constraintViolations) {
+				throw new AuthenticationServiceException(constraintViolation.getMessage());
+			}
 			
 		} catch (IOException e) {
 			throw new InsufficientAuthenticationException(e.getMessage());

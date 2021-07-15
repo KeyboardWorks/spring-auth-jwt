@@ -26,6 +26,10 @@ public class GenericResponseHelper {
 		return status(HttpStatus.BAD_REQUEST, errors);
 	}
 	
+	public static <T> GenericResponse<T> forbidden(String errorMessage) {
+		return status(HttpStatus.FORBIDDEN, errorMessage);
+	}
+	
 	public static <T> GenericResponse<T> unauthorized(String errorMessage) {
 		return status(HttpStatus.UNAUTHORIZED, errorMessage);
 	}

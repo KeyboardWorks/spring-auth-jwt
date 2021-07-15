@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -19,6 +20,12 @@ import keyboard.works.utils.GenericResponseHelper;
 @RestControllerAdvice
 public class AppExceptionHandler {
 
+	@ResponseStatus(value = HttpStatus.FORBIDDEN)
+	@ExceptionHandler(AuthenticationException.class)
+	public GenericResponse<?> handlerAuthenticationExceptions(AuthenticationException exception, WebRequest webRequest) {
+		return GenericResponseHelper.forbidden(exception.getMessage());
+	}
+	
 	@ResponseStatus(value = HttpStatus.BAD_REQUEST)
 	@ExceptionHandler(BindException.class)
 	public GenericResponse<Object> handlerBindException(BindException exception, WebRequest webRequest) {
