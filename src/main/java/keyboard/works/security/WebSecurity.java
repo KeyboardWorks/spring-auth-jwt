@@ -5,10 +5,11 @@ import java.nio.charset.StandardCharsets;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.validation.Validator;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -16,7 +17,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,12 +33,9 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
 	
 	private final BCryptPasswordEncoder bCryptPasswordEncoder;
 	
-	private final Validator validator;
-	
-	public WebSecurity(UserService userService, BCryptPasswordEncoder bCryptPasswordEncoder, Validator validator) {
+	public WebSecurity(UserService userService, BCryptPasswordEncoder bCryptPasswordEncoder) {
 		this.userService = userService;
 		this.bCryptPasswordEncoder = bCryptPasswordEncoder;
-		this.validator = validator;
 	}
 	
 	@Override
@@ -50,23 +48,22 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
 			.csrf().disable()
 			.authorizeRequests()
 			.antMatchers(HttpMethod.POST, SecurityConstants.SIGNUP_URL).permitAll()
+			.antMatchers(HttpMethod.POST, SecurityConstants.LOGIN_URL).permitAll()
 			.anyRequest().authenticated()
 		.and()
-			.addFilter(getAuthenticationFilter())
-			.addFilterAfter(new AuthorizationFilter(), AuthenticationFilter.class)
+			.addFilterAfter(new AuthorizationFilter(), UsernamePasswordAuthenticationFilter.class)
 		.exceptionHandling().authenticationEntryPoint(this::unauthorizedEntryPoint);
-	}
-	
-	private AuthenticationFilter getAuthenticationFilter() throws Exception {
-		final AuthenticationFilter filter = new AuthenticationFilter(authenticationManager(), validator);
-		filter.setRequiresAuthenticationRequestMatcher(new AntPathRequestMatcher("/users/login", "POST"));
-		
-		return filter;
 	}
 	
 	@Override
 	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 		auth.userDetailsService(userService).passwordEncoder(bCryptPasswordEncoder);
+	}
+	
+	@Override
+	@Bean
+	public AuthenticationManager authenticationManagerBean() throws Exception {
+		return super.authenticationManagerBean();
 	}
 	
 	private void unauthorizedEntryPoint(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws JsonProcessingException, IOException {

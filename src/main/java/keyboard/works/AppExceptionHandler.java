@@ -20,15 +20,15 @@ import keyboard.works.utils.GenericResponseHelper;
 @RestControllerAdvice
 public class AppExceptionHandler {
 
-	@ResponseStatus(value = HttpStatus.FORBIDDEN)
+	@ResponseStatus(value = HttpStatus.UNAUTHORIZED)
 	@ExceptionHandler(AuthenticationException.class)
 	public GenericResponse<?> handlerAuthenticationExceptions(AuthenticationException exception, WebRequest webRequest) {
-		return GenericResponseHelper.forbidden(exception.getMessage());
+		return GenericResponseHelper.unauthorized(exception.getMessage());
 	}
 	
 	@ResponseStatus(value = HttpStatus.BAD_REQUEST)
 	@ExceptionHandler(BindException.class)
-	public GenericResponse<Object> handlerBindException(BindException exception, WebRequest webRequest) {
+	public GenericResponse<?> handlerBindException(BindException exception, WebRequest webRequest) {
 		
 		List<Map<String, String>> errors = new LinkedList<>();
 		
